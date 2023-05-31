@@ -1,0 +1,19 @@
+[
+    {
+        "pipeline": {
+          "type": "Models"
+        },
+        "sources": ["model/**/*"]
+    },
+    {
+      "pipeline": {
+        "type": "Models"
+      },
+      "sources": ["anim/**/*"]
+  },
+    {
+        "pipeline": {
+          "type": "Audio"
+        }
+    }
+]
