@@ -18,7 +18,7 @@ use ambient_api::{
     prelude::*,
 };
 
-use components::{player_head_ref, player_movement_direction, player_pitch, player_yaw};
+use components::*;
 use std::f32::consts::{PI, TAU};
 
 mod anim;
@@ -107,6 +107,28 @@ pub async fn main() {
         entity::set_component(player_id, rotation(), Quat::from_rotation_z(yaw));
         if let Some(head_id) = entity::get_component(player_id, player_head_ref()) {
             entity::set_component(head_id, rotation(), Quat::from_rotation_x(PI / 2. + pitch));
+        }
+    });
+
+    messages::Ray::subscribe(move |_source, msg| {
+        let result = physics::raycast_first(msg.ray_origin, msg.ray_dir);
+        if let Some(hit) = result {     
+            if entity::has_component(hit.entity, zombie_model_ref()) && msg.type_action == 0 {
+                println!("hit zombie");
+                entity::mutate_component(hit.entity, zombie_health(), |x| {
+                    if *x <= 0 {
+                        return;
+                    }
+                    if *x - 10 < 0 {
+                        run_async(async move {
+                            println!("zombie dead");
+                            
+                        });
+                    } else {
+                        *x-=10;
+                    }
+                });
+            }
         }
     });
 

@@ -1,4 +1,5 @@
 use crate::components;
+// use ambient_api::client::anim2;
 
 use ambient_api::{
     components::core::{
@@ -20,7 +21,7 @@ use ambient_api::{
     prelude::*,
 };
 
-use components::{player_head_ref, player_movement_direction, player_pitch, player_yaw};
+use components::*;
 use std::f32::consts::{PI, TAU};
 
 pub fn make_zombies(amount: usize) {
@@ -52,7 +53,8 @@ pub fn make_zombies(amount: usize) {
                 .with(children(), vec![model])
                 .with_default(local_to_world())
                 .with_default(physics_controlled())
-                .with_default(components::is_zombie())
+                .with(components::zombie_model_ref(), model)
+                .with(components::zombie_health(), 100)
             );
             let actions = [
                 entity::AnimationAction {
@@ -73,10 +75,36 @@ pub fn make_zombies(amount: usize) {
         }
     });
 
-    let player_query = query(translation()). requires(player()).build();
-    query((translation(), components::is_zombie())).each_frame(move |zombies|{
-        for (zombie, (pos, _)) in zombies {
+    change_query((zombie_health(), zombie_model_ref())).track_change(zombie_health()).bind(move |zombies|{
+        for (zombie, (health, model)) in zombies {
+           println!("zombie {} health: {}", zombie, health);
+           if health <= 0 {
+                println!("zombie {} died, should play death anim", zombie);
+                let actions = [
+                    entity::AnimationAction {
+                        clip_url: &asset::url("assets/anim/Zombie Death.fbx/animations/mixamo.com.anim").unwrap(),
+                        looping: false,
+                        weight: 1.0,
+                    },
+                ];
 
+                entity::set_animation_controller(
+                    model,
+                    entity::AnimationController {
+                        actions: &actions,
+                        apply_base_pose: false,
+                    },
+                );
+           }
+        }
+    });
+
+    let player_query = query(translation()). requires(player()).build();
+    query((translation(), components::zombie_model_ref())).each_frame(move |zombies|{
+        for (zombie, (pos, _)) in zombies {
+            if entity::get_component(zombie, zombie_health()).unwrap() <= 0 {
+                continue;
+            }
             let players: Vec<(EntityId, Vec3)> = player_query.evaluate();
             let zombie_pos = vec2(pos.x, pos.y);
 

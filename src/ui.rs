@@ -15,49 +15,30 @@ pub fn App(hooks: &mut Hooks) -> Element {
     //     set_players(v);
     // });
 
-    let window_size = entity::get_component(entity::resources(), window_logical_size()).unwrap();
-    let mut center_x = window_size.x as f32 / 2.;
-    let mut center_y = window_size.y as f32 / 2.;
-
     let size_info = hooks.use_query(window_logical_size());
-
-    // let mut  center_x; // = window_size.x as f32 / 2.;
-    // let mut center_y; // = window_size.y as f32 / 2.;
-    for (resource_id, xy) in size_info {
-        println!("window size: {:?} {:?}", resource_id, xy);
-        center_x = xy.x as f32 / 2.;
-        center_y = xy.y as f32 / 2.;
+    for (resource_id, xy) in &size_info {
+        println!("window size change: {:?} {:?}", resource_id, xy);
     }
-    
-    // let window_size = entity::get_component(entity::resources(), window_logical_size()).unwrap();
-    // let center_x = window_size.x as f32 / 2.;
-    // let center_y = window_size.y as f32 / 2.;
+    let center_x = size_info[0].1.x as f32 / 2.;
+    let center_y = size_info[0].1.y as f32 / 2.;
+
+    // let zombie_health_list = hooks.use_query(crate::components::zombie_health());
+    // println!("zombie health list: {:?}", zombie_health_list);
+    // for (zombie_id, health) in &zombie_health_list {
+    //     println!("zombie health: {:?} {:?}", zombie_id, health);
+    // }
+
     Group::el([
         // FocusRoot::el([FlowColumn::el(
-        //     [
-        //         Text::el("[wsad] => move; [space] => jump; [shift] => run;"),
-        //         Text::el("[mouse move] => look around; [click] => shoot;"),
-        //         Text::el("dead players will respawn in 2 seconds"),
-        //     ]
-        //     // players.iter().map(|(id, health, death_count)| {
-        //     //     if *health == 0 {
-        //     //         FlowRow::el([
-        //     //             Text::el(format!("Player {}", id)),
-        //     //             Text::el(format!("Hit out! Wait for respawn!")),
-        //     //             Text::el(format!("Death count: {}", death_count)),
-        //     //         ])
-        //     //     } else {
-        //     //         FlowRow::el([
-        //     //             Text::el(format!("Player {}", id)),
-        //     //             Text::el(format!("Health: {:.2}", health)),
-        //     //             Text::el(format!("Death count: {}", death_count)),
-        //     //         ])
-        //     //     }
-        //     //     .with(space_between_items(), STREET)
-        //     // })
-        // )
+        //     zombie_health_list.iter().map(|(id, health)| {
+        //             FlowRow::el([
+        //                 Text::el(format!("Player {}", id)),
+        //                 Text::el(format!("Health: {}", health)),
+        //             ])
+        //     }).collect::<Vec<_>>()
+        // )])
         // .with_background(vec4(0., 0., 0., 0.9))
-        // .with_padding_even(10.)]),
+        // .with_padding_even(10.),
         Line.el()
             .with(line_from(), vec3(center_x - 10., center_y, 0.))
             .with(line_to(), vec3(center_x + 10., center_y, 0.))
