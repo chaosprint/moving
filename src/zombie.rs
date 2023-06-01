@@ -55,22 +55,9 @@ pub fn make_zombies(amount: usize) {
                 .with_default(physics_controlled())
                 .with(components::zombie_model_ref(), model)
                 .with(components::zombie_health(), 100)
+                .with(zombie_hit_reaction_count(), 0)
             );
-            let actions = [
-                entity::AnimationAction {
-                    clip_url: &asset::url("assets/anim/Zombie Run.fbx/animations/mixamo.com.anim").unwrap(),
-                    looping: true,
-                    weight: 1.0,
-                },
-            ];
-
-            entity::set_animation_controller(
-                model,
-                entity::AnimationController {
-                    actions: &actions,
-                    apply_base_pose: false,
-                },
-            );
+            set_walk(model);
             sleep(random::<f32>()).await;
         }
     });
@@ -95,6 +82,29 @@ pub fn make_zombies(amount: usize) {
                         apply_base_pose: false,
                     },
                 );
+            } else {
+                let actions = [
+                    entity::AnimationAction {
+                        clip_url: &asset::url("assets/anim/Zombie Hit.fbx/animations/mixamo.com.anim").unwrap(),
+                        looping: false,
+                        weight: 1.0,
+                    },
+                ];
+
+                entity::set_animation_controller(
+                    model,
+                    entity::AnimationController {
+                        actions: &actions,
+                        apply_base_pose: false,
+                    },
+                );
+
+                run_async(async move {
+                    sleep(0.5).await;
+                    if entity::get_component(zombie, zombie_health()).unwrap() > 0 {
+                        set_walk(model);
+                    }
+                })
            }
         }
     });
@@ -103,6 +113,9 @@ pub fn make_zombies(amount: usize) {
     query((translation(), components::zombie_model_ref())).each_frame(move |zombies|{
         for (zombie, (pos, _)) in zombies {
             if entity::get_component(zombie, zombie_health()).unwrap() <= 0 {
+                continue;
+            }
+            if entity::get_component(zombie, zombie_hit_reaction_count()).unwrap() > 0 {
                 continue;
             }
             let players: Vec<(EntityId, Vec3)> = player_query.evaluate();
@@ -142,4 +155,22 @@ pub fn make_zombies(amount: usize) {
             }
         }
     });
+}
+
+pub fn set_walk(model: EntityId) {
+    let actions = [
+        entity::AnimationAction {
+            clip_url: &asset::url("assets/anim/Zombie Run.fbx/animations/mixamo.com.anim").unwrap(),
+            looping: true,
+            weight: 1.0,
+        },
+    ];
+
+    entity::set_animation_controller(
+        model,
+        entity::AnimationController {
+            actions: &actions,
+            apply_base_pose: false,
+        },
+    );
 }

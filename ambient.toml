@@ -10,6 +10,8 @@ model_ref = { type = "EntityId", name = "Model ref", description = "The model.",
     "Debuggable", "Networked"
 ] }
 
+zombie_hit_reaction_count = { type = "I32", attributs= ["Networked", "Debuggable"] }
+
 zombie_health = { type = "I32", attributs= ["Networked", "Debuggable"] }
 
 zombie_model_ref = { type = "EntityId", attributs= ["Networked", "Debuggable"] }
