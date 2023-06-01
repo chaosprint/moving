@@ -1,3 +1,5 @@
+use crate::components;
+
 use ambient_api::{
     components::core::{
         app::main_scene,
@@ -21,21 +23,20 @@ use ambient_api::{
 use components::{player_head_ref, player_movement_direction, player_pitch, player_yaw};
 use std::f32::consts::{PI, TAU};
 
-
-pub fn make_zombies() {
+pub fn make_zombies(amount: usize) {
     let chars = vec![
-        asset::url("assets/Zombiegirl W Kurniawan.fbx").unwrap(),
-        asset::url("assets/copzombie_l_actisdato.fbx").unwrap(),
-        asset::url("assets/Yaku J Ignite.fbx").unwrap(),
+        asset::url("assets/model/Zombiegirl W Kurniawan.fbx").unwrap(),
+        asset::url("assets/model/copzombie_l_actisdato.fbx").unwrap(),
+        asset::url("assets/model/Yaku J Ignite.fbx").unwrap(),
     ];
 
     run_async(async move {
-        for i in 0..3 {
+        for i in 0..amount {
             let zombie = Entity::new()
             .spawn();
             
             let model = make_transformable()
-            .with(prefab_from_url(), chars[i].clone())
+            .with(prefab_from_url(), chars[i%3].clone())
             .with(parent(), zombie)
             .with_default(local_to_parent())
             .with(rotation(), Quat::from_rotation_z(-3.14159265359/2.0))
@@ -47,7 +48,7 @@ pub fn make_zombies() {
                 make_transformable()
                 .with(character_controller_height(), 2.)
                 .with(character_controller_radius(), 0.5)
-                .with(translation(), vec3(-8.0*random::<f32>(), -8.0*random::<f32>(), 5.0))
+                .with(translation(), vec3(100.0*random::<f32>(), 100.0*random::<f32>(), 5.0))
                 .with(children(), vec![model])
                 .with_default(local_to_world())
                 .with_default(physics_controlled())
@@ -55,7 +56,7 @@ pub fn make_zombies() {
             );
             let actions = [
                 entity::AnimationAction {
-                    clip_url: &asset::url("assets/Zombie Run.fbx/animations/mixamo.com.anim").unwrap(),
+                    clip_url: &asset::url("assets/anim/Zombie Run.fbx/animations/mixamo.com.anim").unwrap(),
                     looping: true,
                     weight: 1.0,
                 },

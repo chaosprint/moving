@@ -1,6 +1,9 @@
 use ambient_api::prelude::*;
+mod ui;
 #[main]
 pub fn main() {
+
+    ui::App.el().spawn_interactive();
 
     ambient_api::messages::Frame::subscribe(move |_| {
         let (_delta, input) = input::get_delta();

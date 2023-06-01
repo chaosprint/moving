@@ -22,22 +22,37 @@ use components::{player_head_ref, player_movement_direction, player_pitch, playe
 use std::f32::consts::{PI, TAU};
 
 mod anim;
+mod zombie;
 
 #[main]
 pub async fn main() {
 
+    zombie::make_zombies(3);
+
     let animations = anim::AnimationAssets::new();
 
-    let cam = Entity::new()
-        .with_merge(make_perspective_infinite_reverse_camera())
-        .with(aspect_ratio_from_window(), EntityId::resources())
-        .with_default(main_scene())
-        .with(translation(), vec3(10.0, 0.0, 10.0)* 1.0)
-        .with(lookat_target(), vec3(0., 0., 0.))
-        .spawn();
+    // let cam = Entity::new()
+    //     .with_merge(make_perspective_infinite_reverse_camera())
+    //     .with(aspect_ratio_from_window(), EntityId::resources())
+    //     .with_default(main_scene())
+    //     .with(translation(), vec3(10.0, 0.0, 10.0)* 1.0)
+    //     .with(lookat_target(), vec3(0., 0., 0.))
+    //     .spawn();
 
     spawn_query(player()).bind(move |players| {
         for (id, _) in players {
+            let cam = Entity::new()
+                .with_merge(make_perspective_infinite_reverse_camera())
+                .with(aspect_ratio_from_window(), EntityId::resources())
+                .with_default(main_scene())
+                // .with(user_id(), uid.clone())
+                .with(translation(), vec3(-0.0, 5.0, 3.0))
+                .with(parent(), id)
+                .with_default(local_to_parent())
+                .with_default(local_to_world())
+                .with(rotation(), Quat::from_rotation_x(PI/2.0))
+                .spawn();
+
             let model = Entity::new()
             .with_merge(make_transformable())
             .with(prefab_from_url(), asset::url("assets/model/Y Bot.fbx").unwrap())
@@ -53,7 +68,8 @@ pub async fn main() {
                 .with(character_controller_height(), 2.0)
                 .with(character_controller_radius(), 0.5)
                 .with_default(physics_controlled())
-                .with(children(), vec![model])
+                .with(children(), vec![model, cam])
+                .with(player_head_ref(), cam)
                 .with(components::model_ref(), model)
                 .with(player_pitch(), 0.0)
                 .with(player_yaw(), 0.0)
@@ -68,11 +84,11 @@ pub async fn main() {
     
     Entity::new()
         .with_merge(make_transformable())
-        // .with(prefab_from_url(), asset::url("assets/Shape.glb").unwrap())
+        // .with(prefab_from_url(), asset::url("assets/map/ground.glb").unwrap())
         .with_default(quad())
         .with_default(plane_collider())
-        // .with(translation(), vec3(0., 0., -1.))
-        .with(scale(), Vec3::ONE*30.0)
+        .with(translation(), vec3(0., 0., -10.))
+        .with(scale(), Vec3::ONE*200.0)
         .spawn();
 
     messages::Input::subscribe(move |source, msg| {
@@ -89,15 +105,20 @@ pub async fn main() {
         })
         .unwrap_or_default();
         entity::set_component(player_id, rotation(), Quat::from_rotation_z(yaw));
+        if let Some(head_id) = entity::get_component(player_id, player_head_ref()) {
+            entity::set_component(head_id, rotation(), Quat::from_rotation_x(PI / 2. + pitch));
+        }
     });
 
-    
-
+    // query the player's component each frame
+    // determine the direction of the player's movement
+    // calculate animations blend
     query((player(), player_movement_direction(), rotation())).each_frame(move |players| {
         for (player_id, (_, direction, rot)) in players {
             // println!("direction: {:?}", direction);
             let speed = 0.1;
             let displace = rot * (direction.normalize_or_zero() * speed).extend(-0.1);
+            
             if let Some(model) = entity::get_component::<EntityId>(player_id, components::model_ref()) {
                 // println!("model: {:?}", model);
                 let mut blend = anim::Blend::default();
@@ -116,7 +137,7 @@ pub async fn main() {
                         blend.right = 1.0;
                     }
                 }
-                println!("blend: {:?}", blend);
+                // println!("blend: {:?}", blend);
                 // animations.set_controller(model, blend);
                 anim::set_blend(model, blend);
                 // let collision = physics::move_character(model, displace, 0.01, frametime());

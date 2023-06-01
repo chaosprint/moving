@@ -10,7 +10,16 @@
         "type": "Models"
       },
       "sources": ["anim/**/*"]
-  },
+    },
+    {
+      "pipeline": {
+        "type": "Models",
+        "collider": {
+          "type": "FromModel"
+        }
+      },
+      "sources": ["map/**/*"]
+    },
     {
         "pipeline": {
           "type": "Audio"
